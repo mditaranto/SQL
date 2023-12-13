@@ -2,8 +2,8 @@ SELECT * FROM Evento
 SELECT * FROM Usuario
 SELECT * FROM Transaccion
 SELECT * FROM APUESTA
-
---Procedimiento que añade una transaccion y modifica el saldo del usuario segun su correo y el dinero introducido
+GO
+--Procedimiento que aï¿½ade una transaccion y modifica el saldo del usuario segun su correo y el dinero introducido
 CREATE PROCEDURE modificarSaldo 
 	@usuario varchar(30),
 	@dinero numeric(10,2)
@@ -26,7 +26,7 @@ BEGIN
 END
 
 EXEC modificarSaldo 'usuario2@example.com', -500
-
+GO
 --Funcion que comprueba si la apuesta es accesible
 CREATE FUNCTION dbo.ComprobarApuestaAccesible (@CodEvento INT)
 RETURNS BIT
@@ -44,9 +44,9 @@ BEGIN
 
     RETURN @Accesible;
 END;
-
+GO
 PRINT dbo.ComprobarApuestaAccesible(4)
-
+GO
 --Funcion para calcular la cuota+
 CREATE OR ALTER FUNCTION Cuota(@porcentil decimal(5,3))
 RETURNS decimal(5,3)
@@ -57,11 +57,11 @@ BEGIN
 
     RETURN @cuota;
 END
-
+GO
 declare @cuota decimal(5,3)
 Set @cuota = dbo.Cuota(dbo.porcentil(1,3))
 print @cuota
-
+GO
 --Funcion para calcular el porcentil
 CREATE OR ALTER FUNCTION porcentil(@Votos Int, @VotosT Int)
 RETURNS decimal (5,2)
@@ -78,9 +78,39 @@ BEGIN
 
 	RETURN @Porcentil;
 END;
-
+GO
 --Funcion para comprobar el resultado
-CREATE OR ALTER FUNCTION ComprobarResultado()
+CREATE OR ALTER FUNCTION ComprobarResultado(@codApuesta int, @codEvento int)
+RETURNS BIT
+AS BEGIN
+	DECLARE @Ganserie varchar(20),
+			@asesinatos int,
+			@serieE1 varchar(20),
+			@serieE2 varchar(20),
+			@Gana BIT
+	SET @Gana = 1
+
+	SELECT @Ganserie = Equipo FROM Evento WHERE CodEvento = @codEvento
+    SELECT @asesinatos = Cantidad FROM Evento WHERE CodEvento = @codEvento
+    SELECT @serieE1 = ResultadoE1, @serieE2 = ResultadoE2 FROM Evento WHERE CodEvento = @codEvento
+
+	if @Ganserie = (SELECT Equipo FROM Ganserie WHERE CodApuesta = @codApuesta)
+		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 ) 
+	else if @asesinatos = (SELECT Cantidad FROM Asesinatos WHERE CodApuesta = @codApuesta)
+		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 )
+	else if @serieE1 = (SELECT ResultadoE1 FROM resultserie WHERE CodApuesta = @codApuesta) and @serieE2 = (SELECT ResultadoE2 FROM resultserie WHERE CodApuesta = @codApuesta)
+		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 )
+	else 
+		SET @Gana = 0
+
+	RETURN @Gana
+END
+GO
+
+
 
 begin Transaction;
 insert into Apuesta values (6, 2, 2000, 'usuario1@example.com', 1)
@@ -89,3 +119,4 @@ insert INTO asesinatos values (2,6)
 rollback
 
 select * from Asesinatos
+
