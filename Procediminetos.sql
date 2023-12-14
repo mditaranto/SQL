@@ -110,6 +110,40 @@ AS BEGIN
 END
 GO
 
+--Trigger que al insertar una fechaFin se ejecuta y ejecuta la funcion comprobar resultado
+CREATE OR ALTER TRIGGER TerminarEvento
+ON Evento
+AFTER INSERT, UPDATE
+AS BEGIN
+	IF EXISTS (SELECT 1 FROM inserted WHERE FechaFin IS NOT NULL)
+	BEGIN
+		DECLARE Cursor_apuestas CURSOR FOR
+		SELECT CodApuesta FROM Apuesta WHERE CodEvento = (SELECT CodEvento FROM inserted)
+
+		DECLARE @CodApuesta INT,
+				@codEvento INT
+		
+		SET @codEvento = (SELECT CodEvento FROM inserted)
+
+		OPEN Cursor_apuestas
+
+		FETCH NEXT FROM Cursor_apuestas INTO @CodApuesta
+
+		WHILE @@FETCH_STATUS = 0
+		BEGIN
+			EXECUTE dbo.ComprobarResultado @CodApuesta, @codEvento
+
+			FETCH NEXT FROM Cursor_apuestas INTO @CodApuesta
+		END
+
+		CLOSE Cursor_apuestas
+		DEALLOCATE Cursor_apuestas
+
+	END 
+END
+
+GO
+
 
 
 begin Transaction;
