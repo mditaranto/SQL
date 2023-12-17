@@ -101,7 +101,7 @@ END
 GO
 
 --Trigger que al insertar una fechaFin se ejecuta y ejecuta la funcion comprobar resultado
-CREATE OR ALTER TRIGGER TerminarEvento
+CREATE OR ALTER TRIGGER AcabarPartido
 ON Evento
 AFTER INSERT, UPDATE
 AS BEGIN
