@@ -80,15 +80,12 @@ BEGIN
 END;
 GO
 --Funcion para comprobar el resultado
-CREATE OR ALTER FUNCTION ComprobarResultado(@codApuesta int, @codEvento int)
-RETURNS BIT
+CREATE OR ALTER PROCEDURE ComprobarResultado(@codApuesta int, @codEvento int)
 AS BEGIN
 	DECLARE @Ganserie varchar(20),
 			@asesinatos int,
 			@serieE1 varchar(20),
-			@serieE2 varchar(20),
-			@Gana BIT
-	SET @Gana = 1
+			@serieE2 varchar(20)
 
 	SELECT @Ganserie = Equipo FROM Evento WHERE CodEvento = @codEvento
     SELECT @asesinatos = Cantidad FROM Evento WHERE CodEvento = @codEvento
@@ -103,10 +100,7 @@ AS BEGIN
 	else if @serieE1 = (SELECT ResultadoE1 FROM resultserie WHERE CodApuesta = @codApuesta) and @serieE2 = (SELECT ResultadoE2 FROM resultserie WHERE CodApuesta = @codApuesta)
 		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
 		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 )
-	else 
-		SET @Gana = 0
 
-	RETURN @Gana
 END
 GO
 
@@ -141,10 +135,98 @@ AS BEGIN
 
 	END 
 END
-
 GO
 
+CREATE OR ALTER PROCEDURE InsertarEvento
+	@fechaIni datetime
 
+AS
+BEGIN
+	SET NOCOUNT ON;
+	DECLARE @CodEvento int
+	SELECT @CodEvento = ISNULL(MAX(CodEvento), 0) + 1 FROM Evento
+
+	INSERT INTO Evento
+	VALUES (NULL, @fechaIni, NULL, @CodEvento, NULL, NULL, NULL)
+
+	PRINT 'Evento insertado'
+END
+USE APUESTAS
+GO
+CREATE OR ALTER PROCEDURE InsertarApuesta1
+	@codEvento int,
+	@dinero numeric(10,2),
+	@correo varchar(30),
+	@equipo varchar(20)
+AS 
+BEGIN 
+	SET NOCOUNT ON;
+	DECLARE @VotosE int,
+			@VotosT int,
+			@Cuota decimal(5,3),
+			@CodApuesta int,
+			@Maximo BIT
+
+	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
+	SELECT @VotosE = COUNT(Ganserie.CodApuesta) FROM Ganserie 
+	INNER JOIN Apuesta ON Ganserie.CodApuesta = Apuesta.CodApuesta 
+	WHERE CodEvento = @codEvento AND Equipo = @equipo
+	
+	SELECT @VotosT = COUNT(Ganserie.CodApuesta) FROM Ganserie
+	SET @Cuota = dbo.Cuota(dbo.porcentil(@VotosE, @VotosT)) 
+
+	BEGIN TRANSACTION
+		INSERT INTO Apuesta
+		VALUES (@codApuesta, @codEvento, @dinero, @correo, @Cuota)
+
+		INSERT INTO Ganserie
+		VALUES (@codApuesta, @equipo)
+
+		DECLARE @SuperaMaximo BIT
+		SELECT @SuperaMaximo = CASE
+		WHEN DineroApostado * Cuota >= Maximo THEN 1
+		ELSE 0
+		END
+		FROM Apuesta
+		INNER JOIN Ganserie ON Apuesta.CodApuesta = Ganserie.CodApuesta
+		WHERE Apuesta.CodApuesta = @CodApuesta AND Equipo = @Equipo;
+
+	IF @SuperaMaximo = 1
+		ROLLBACK;
+	ELSE
+		COMMIT;
+END
+GO
+CREATE OR ALTER PROCEDURE InsertarApuesta2
+	@codEvento int,
+	@dinero numeric(10,2),
+	@correo varchar(30),
+	@asesinatos int
+AS
+BEGIN
+	SET NOCOUNT ON;
+	DECLARE @CodApuesta int
+	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
+	BEGIN TRANSACTION
+		INSERT INTO Apuesta
+		VALUES (@codApuesta, @codEvento, @dinero, @correo, 2)
+		
+		INSERT INTO Asesinatos
+		VALUES (@asesinatos, @codApuesta)
+
+		DECLARE @SuperaMaximo BIT
+		SELECT @SuperaMaximo = CASE
+		WHEN DineroApostado * Cuota >= Maximo THEN 1
+		ELSE 0
+		END
+		FROM Apuesta
+		INNER JOIN Asesinatos ON Apuesta.CodApuesta = Asesinatos.CodApuesta
+		WHERE Apuesta.CodApuesta = @CodApuesta AND Cantidad = @asesinatos;
+
+	IF @SuperaMaximo = 1
+		ROLLBACK;
+	ELSE
+		COMMIT;
 
 begin Transaction;
 insert into Apuesta values (6, 2, 2000, 'usuario1@example.com', 1)
@@ -153,4 +235,3 @@ insert INTO asesinatos values (2,6)
 rollback
 
 select * from Asesinatos
-

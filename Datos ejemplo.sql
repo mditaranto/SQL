@@ -15,12 +15,12 @@ INSERT INTO Evento (Equipo, FechaIni, FechaFin, CodEvento, Cantidad, ResultadoE1
     ('EquipoE', '2023-12-02 20:30:00', NULL, 5, 180, 0, 0);
 
 	-- Inserts de ejemplo para la tabla Apuesta
-INSERT INTO Apuesta (CodApuesta, Cuota, CorreoUser, CodEvento, dineroApostado) VALUES
-    (1, 2.50, 'usuario1@example.com', 1, 50.00),
-    (2, 3.00, 'usuario2@example.com', 2, 75.00),
-    (3, 1.80, 'usuario3@example.com', 3, 90.00),
-    (4, 4.20, 'usuario4@example.com', 4, 60.00),
-    (5, 2.00, 'usuario5@example.com', 5, 90.00);
+INSERT INTO Apuesta (CodApuesta, Cuota, CorreoUser, CodEvento, dineroApostado, Maximo) VALUES
+    (1, 2.50, 'usuario1@example.com', 1, 50.00, 10000),
+    (2, 3.00, 'usuario2@example.com', 2, 75.00, 10000),
+    (3, 1.80, 'usuario3@example.com', 3, 90.00, 10000),
+    (4, 4.20, 'usuario4@example.com', 4, 60.00, 10000),
+    (5, 2.00, 'usuario5@example.com', 5, 90.00, 10000);
 
 -- Inserts de ejemplo para la tabla Transaccion
 INSERT INTO Transaccion (CodTrans, Fecha, Dinero, CorreoUser) VALUES
