@@ -32,8 +32,8 @@ CREATE TABLE Apuesta(
 	dineroApostado numeric(12,2) not null,
 	Maximo bigint not null,
 
-	Constraint FK_apuesta_evento FOREIGN KEY (CodEvento) REFERENCES Evento(CodEvento),
-	Constraint FK_apuesta FOREIGN KEY (CorreoUser) REFERENCES Usuario(Correo)
+	Constraint FK_apuesta_evento FOREIGN KEY (CodEvento) REFERENCES Evento(CodEvento) ON DELETE CASCADE ON UPDATE CASCADE,
+	Constraint FK_apuesta FOREIGN KEY (CorreoUser) REFERENCES Usuario(Correo) ON DELETE CASCADE ON UPDATE CASCADE
 )
 
 CREATE TABLE Transaccion (
@@ -42,21 +42,21 @@ CREATE TABLE Transaccion (
 	Dinero numeric(10,2) not null,
 	CorreoUser varChar(30) not null,
 
-	Constraint FK_Trans FOREIGN KEY (CorreoUser) REFERENCES Usuario(Correo)
+	Constraint FK_Trans FOREIGN KEY (CorreoUser) REFERENCES Usuario(Correo) ON DELETE CASCADE ON UPDATE CASCADE
 )
 
 
 CREATE TABLE Asesinatos (
 	Cantidad int not null,
 	CodApuesta int not null primary key,
-	CONSTRAINT FK_asesinatos FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta)
+	CONSTRAINT FK_asesinatos FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta) ON DELETE CASCADE ON UPDATE CASCADE
 
 )
 
 CREATE TABLE Ganserie (
 	Equipo varchar(20) not null,
 	CodApuesta int not null primary key,
-	CONSTRAINT FK_ganserie FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta)
+	CONSTRAINT FK_ganserie FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta) ON DELETE CASCADE ON UPDATE CASCADE
 
 )
 
@@ -64,6 +64,6 @@ CREATE TABLE resultserie (
 	ResultadoE1 tinyint not null,
 	ResultadoE2 tinyint not null,
 	CodApuesta int not null primary key,
-	CONSTRAINT FK_resultserie FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta)
+	CONSTRAINT FK_resultserie FOREIGN KEY (CodApuesta) REFERENCES Apuesta(CodApuesta) ON DELETE CASCADE ON UPDATE CASCADE
 
 )
