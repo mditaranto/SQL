@@ -1,8 +1,7 @@
-SELECT * FROM Evento
-SELECT * FROM Usuario
-SELECT * FROM Transaccion
-SELECT * FROM APUESTA
-GO
+
+
+
+
 --Procedimiento que a�ade una transaccion y modifica el saldo del usuario segun su correo y el dinero introducido
 CREATE PROCEDURE modificarSaldo 
 	@usuario varchar(30),
@@ -136,7 +135,7 @@ AS BEGIN
 	END 
 END
 GO
-
+--Procedimiento que inserta un evento
 CREATE OR ALTER PROCEDURE InsertarEvento
 	@fechaIni datetime
 
@@ -151,8 +150,9 @@ BEGIN
 
 	PRINT 'Evento insertado'
 END
-USE APUESTAS
 GO
+
+--Procedimiento que inserta una apuesta de tipo 1
 CREATE OR ALTER PROCEDURE InsertarApuesta1
 	@codEvento int,
 	@dinero numeric(10,2),
@@ -164,8 +164,7 @@ BEGIN
 	DECLARE @VotosE int,
 			@VotosT int,
 			@Cuota decimal(5,3),
-			@CodApuesta int,
-			@Maximo BIT
+			@CodApuesta int
 
 	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
 	SELECT @VotosE = COUNT(Ganserie.CodApuesta) FROM Ganserie 
@@ -177,7 +176,7 @@ BEGIN
 
 	BEGIN TRANSACTION
 		INSERT INTO Apuesta
-		VALUES (@codApuesta, @codEvento, @dinero, @correo, @Cuota)
+		VALUES (@codApuesta, @codEvento, @dinero, @correo, @Cuota, 10000)
 
 		INSERT INTO Ganserie
 		VALUES (@codApuesta, @equipo)
@@ -195,8 +194,11 @@ BEGIN
 		ROLLBACK;
 	ELSE
 		COMMIT;
+		SELECT dbo.modificarSaldo(@correo, -@dinero)
 END
 GO
+
+--Procedimiento que inserta una apuesta de tipo 2
 CREATE OR ALTER PROCEDURE InsertarApuesta2
 	@codEvento int,
 	@dinero numeric(10,2),
@@ -209,7 +211,7 @@ BEGIN
 	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
 	BEGIN TRANSACTION
 		INSERT INTO Apuesta
-		VALUES (@codApuesta, @codEvento, @dinero, @correo, 2)
+		VALUES (@codApuesta, @codEvento, @dinero, @correo, 2, 10000)
 		
 		INSERT INTO Asesinatos
 		VALUES (@asesinatos, @codApuesta)
@@ -227,11 +229,90 @@ BEGIN
 		ROLLBACK;
 	ELSE
 		COMMIT;
+		SELECT dbo.modificarSaldo(@correo, -@dinero)
+END
+GO
 
-begin Transaction;
-insert into Apuesta values (6, 2, 2000, 'usuario1@example.com', 1)
-insert INTO asesinatos values (2,6)
+--Procedimiento que inserta una apuesta de tipo 3
+CREATE OR ALTER PROCEDURE InsertarApuesta3
+	@codEvento int,
+	@dinero numeric(10,2),
+	@correo varchar(30),
+	@resultadoE1 int,
+	@resultadoE2 int
+AS
+BEGIN 
+	SET NOCOUNT ON;
+		DECLARE @VotosE int,
+				@VotosT int,
+				@Cuota decimal(5,3),
+				@CodApuesta int
 
-rollback
+	SELECT @VotosT = COUNT(resultserie.CodApuesta) FROM resultserie
+	SELECT @VotosE = COUNT(resultserie.CodApuesta) FROM resultserie 
+	INNER JOIN Apuesta ON resultserie.CodApuesta = Apuesta.CodApuesta 
+	WHERE CodEvento = @codEvento AND ResultadoE1 = @resultadoE1 AND ResultadoE2 = @resultadoE2
 
-select * from Asesinatos
+	SELECT @Cuota = dbo.Cuota(dbo.porcentil(@VotosE, @VotosT))
+
+	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
+	BEGIN TRANSACTION
+		INSERT INTO Apuesta
+		VALUES (@codApuesta, @codEvento, @dinero, @correo, @Cuota, 10000)
+		
+		INSERT INTO resultserie
+		VALUES (@resultadoE1, @resultadoE2, @codApuesta)
+
+		DECLARE @SuperaMaximo BIT
+		SELECT @SuperaMaximo = CASE
+		WHEN DineroApostado * Cuota >= Maximo THEN 1
+		ELSE 0
+		END
+		FROM Apuesta
+		INNER JOIN resultserie ON Apuesta.CodApuesta = resultserie.CodApuesta
+		WHERE Apuesta.CodApuesta = @CodApuesta AND ResultadoE1 = @resultadoE1 AND ResultadoE2 = @resultadoE2;
+	IF @SuperaMaximo = 1
+		ROLLBACK;
+	ELSE
+		COMMIT;
+		SELECT dbo.modificarSaldo(@correo, -@dinero)
+END
+GO
+
+--Procedimiento que crea un usuario
+CREATE OR ALTER PROCEDURE CrearUsuario
+	@correo varchar(30),
+	@passw varchar(30),
+	@saldo numeric(10,2)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	IF EXISTS (SELECT 1 FROM Usuario WHERE Correo = @correo)
+	PRINT 'El usuario ya existe'
+	ELSE
+	INSERT INTO Usuario
+	VALUES (@correo, @passw, @saldo)
+
+	PRINT 'Usuario creado'
+END
+GO
+
+--Procedimiento que termina un evento
+CREATE PROCEDURE TerminarEvento
+	@codEvento int,
+	@resultadoE1 int,
+	@resultadoE2 int,
+	@equipo varchar(20),
+	@asesinatos int
+AS BEGIN
+	SET NOCOUNT ON;
+	IF EXISTS (SELECT 1 FROM Evento WHERE CodEvento = @codEvento)
+	BEGIN 
+	UPDATE Evento
+	SET FechaFin = CURRENT_TIMESTAMP, ResultadoE1 = @resultadoE1, ResultadoE2 = @resultadoE2
+	WHERE CodEvento = @codEvento
+	END
+	ELSE
+	PRINT 'El evento no existe'
+END
+

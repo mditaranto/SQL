@@ -30,6 +30,7 @@ CREATE TABLE Apuesta(
 	CorreoUser varChar(30) not null,
 	CodEvento Int not null,
 	dineroApostado numeric(12,2) not null,
+	Maximo bigint not null,
 
 	Constraint FK_apuesta_evento FOREIGN KEY (CodEvento) REFERENCES Evento(CodEvento),
 	Constraint FK_apuesta FOREIGN KEY (CorreoUser) REFERENCES Usuario(Correo)
