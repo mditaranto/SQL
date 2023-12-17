@@ -1,7 +1,4 @@
 
-
-
-
 --Procedimiento que a�ade una transaccion y modifica el saldo del usuario segun su correo y el dinero introducido
 CREATE PROCEDURE modificarSaldo 
 	@usuario varchar(30),
@@ -194,7 +191,7 @@ BEGIN
 		ROLLBACK;
 	ELSE
 		COMMIT;
-		SELECT dbo.modificarSaldo(@correo, -@dinero)
+		UPDATE Usuario SET saldo = saldo - @dinero
 END
 GO
 
@@ -229,7 +226,7 @@ BEGIN
 		ROLLBACK;
 	ELSE
 		COMMIT;
-		SELECT dbo.modificarSaldo(@correo, -@dinero)
+		UPDATE Usuario SET saldo = saldo - @dinero
 END
 GO
 
@@ -275,7 +272,7 @@ BEGIN
 		ROLLBACK;
 	ELSE
 		COMMIT;
-		SELECT dbo.modificarSaldo(@correo, -@dinero)
+		UPDATE Usuario SET saldo = saldo - @dinero
 END
 GO
 
