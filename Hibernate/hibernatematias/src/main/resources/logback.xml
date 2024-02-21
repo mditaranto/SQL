@@ -1,0 +1,8 @@
+<configuration>
+
+    <!-- Other Logback configurations can go here -->
+
+    <logger name="org.hibernate.SQL" level="ERROR" />
+    <logger name="org.hibernate.type.descriptor.sql" level="ERROR" />
+
+</configuration>

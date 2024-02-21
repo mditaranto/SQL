@@ -8,10 +8,12 @@
   <property name="hibernate.connection.url">jdbc:mysql://dns11036.phdns11.es:3306/ad2324_mditaranto</property>
   <property name="hibernate.connection.username">mditaranto</property>
   <property name="hibernate.default_schema">ad2324_mditaranto</property>
-  <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+  <property name="hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
   <property name="hibernate.show_sql">true</property>
   <property name="hibernate.format_sql">true</property>
-  <property name="hibernate.hbm2ddl.auto">create</property>
+  <property name="hibernate.hbm2ddl.auto">update</property>
   <mapping class="com.matias.hibernate.hibernatematias.Player"/>
+  <mapping class="com.matias.hibernate.hibernatematias.Games"/>
+  <mapping class="com.matias.hibernate.hibernatematias.Compras"/>
  </session-factory>
 </hibernate-configuration>

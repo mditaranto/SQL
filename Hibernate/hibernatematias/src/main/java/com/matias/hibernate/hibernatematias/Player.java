@@ -1,22 +1,41 @@
 package com.matias.hibernate.hibernatematias;
 
+
+import java.io.Serializable;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
-public class Player {
+@Table(name = "Player")
+public class Player implements Serializable{
 	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idPlayer")
 	private int IdPlayer;
 	
+	@Column(name = "nick")
 	private String Nick;
 	
+	@Column(name = "password")
 	private String password;
 	
+	@Column(name = "email")
 	private String email;
 	
 	public Player() {
-		
+
+	}
+	
+	public Player(String nick, String password, String email) {
+		setNick(nick);
+		setPassword(password);
+		setEmail(email);
 	}
 
 	public int getIdPlayer() {
