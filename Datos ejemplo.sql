@@ -1,3 +1,4 @@
+USE apuestas;
 -- Inserts de ejemplo para la tabla Usuario
 INSERT INTO Usuario (Correo, passw, saldo) VALUES
     ('usuario1@example.com', 'clave123', 500.00),

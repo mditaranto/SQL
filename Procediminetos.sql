@@ -1,4 +1,7 @@
-
+USE APUESTAS
+GO
+SELECT * FROM evento
+GO
 --Procedimiento que a�ade una transaccion y modifica el saldo del usuario segun su correo y el dinero introducido
 CREATE PROCEDURE modificarSaldo 
 	@usuario varchar(30),
@@ -81,21 +84,23 @@ AS BEGIN
 	DECLARE @Ganserie varchar(20),
 			@asesinatos int,
 			@serieE1 varchar(20),
-			@serieE2 varchar(20)
+			@serieE2 varchar(20),
+			@dineroganado numeric(10,2)
 
+	SELECT @dineroganado = DineroApostado * Cuota FROM Apuesta WHERE CodApuesta = @codApuesta
 	SELECT @Ganserie = Equipo FROM Evento WHERE CodEvento = @codEvento
     SELECT @asesinatos = Cantidad FROM Evento WHERE CodEvento = @codEvento
     SELECT @serieE1 = ResultadoE1, @serieE2 = ResultadoE2 FROM Evento WHERE CodEvento = @codEvento
 
 	if @Ganserie = (SELECT Equipo FROM Ganserie WHERE CodApuesta = @codApuesta)
-		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
-		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 ) 
+		UPDATE Usuario SET saldo = saldo + @dineroganado
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta = @codApuesta ) 
 	else if @asesinatos = (SELECT Cantidad FROM Asesinatos WHERE CodApuesta = @codApuesta)
-		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
-		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 )
+		UPDATE Usuario SET saldo = saldo + @dineroganado
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta = @codApuesta )
 	else if @serieE1 = (SELECT ResultadoE1 FROM resultserie WHERE CodApuesta = @codApuesta) and @serieE2 = (SELECT ResultadoE2 FROM resultserie WHERE CodApuesta = @codApuesta)
-		UPDATE Usuario SET saldo = saldo + (SELECT dineroApostado FROM Apuesta where CodApuesta = @codApuesta)
-		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta =1 )
+		UPDATE Usuario SET saldo = saldo + @dineroganado
+		WHERE Correo = (SELECT CorreoUser FROM Apuesta WHERE CodApuesta = @codApuesta )
 
 END
 GO
@@ -208,7 +213,7 @@ BEGIN
 	SELECT @CodApuesta = ISNULL(MAX(CodApuesta), 0) + 1 FROM Apuesta
 	BEGIN TRANSACTION
 		INSERT INTO Apuesta
-		VALUES (@codApuesta, @codEvento, @dinero, @correo, 2, 10000)
+		VALUES (@codApuesta,2, @correo,  @codEvento, @dinero, 10000)
 		
 		INSERT INTO Asesinatos
 		VALUES (@asesinatos, @codApuesta)
@@ -230,6 +235,7 @@ BEGIN
 END
 GO
 
+EXECUTE dbo.InsertarApuesta2 2, 200, 'usuario2@example.com', 50
 --Procedimiento que inserta una apuesta de tipo 3
 CREATE OR ALTER PROCEDURE InsertarApuesta3
 	@codEvento int,
@@ -295,7 +301,7 @@ END
 GO
 
 --Procedimiento que termina un evento
-CREATE PROCEDURE TerminarEvento
+CREATE OR ALTER PROCEDURE TerminarEvento
 	@codEvento int,
 	@resultadoE1 int,
 	@resultadoE2 int,
@@ -306,10 +312,16 @@ AS BEGIN
 	IF EXISTS (SELECT 1 FROM Evento WHERE CodEvento = @codEvento)
 	BEGIN 
 	UPDATE Evento
-	SET FechaFin = CURRENT_TIMESTAMP, ResultadoE1 = @resultadoE1, ResultadoE2 = @resultadoE2
+	SET FechaFin = CURRENT_TIMESTAMP, ResultadoE1 = @resultadoE1, ResultadoE2 = @resultadoE2, equipo = @equipo, Cantidad = @asesinatos
 	WHERE CodEvento = @codEvento
 	END
 	ELSE
 	PRINT 'El evento no existe'
 END
 
+SELECT * FROM Evento
+SELECT * FROM Apuesta
+SELECT * FROM Usuario
+
+
+EXECUTE dbo.TerminarEvento 3,2,2,'T1',50
