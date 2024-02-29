@@ -35,8 +35,13 @@ public class Accesobd {
         sf.close();
     }
 
-    public Object guardar(Object cosa) {
-        return sesion.save(cosa);
+	public void guardar(Object cosa) {
+		sesion=sf.openSession();
+        transaction = sesion.beginTransaction();
+        int id = (int) sesion.save(cosa);
+        transaction.commit();
+        System.out.println(id);
+        sesion.close();
     }
     
 	public Object get(Class cosa, int id) {
@@ -44,10 +49,19 @@ public class Accesobd {
 	}
 	
 	public void actualizar(Object cosa) {
+		sesion=sf.openSession();
+        transaction = sesion.beginTransaction();
 		sesion.update(cosa);
+		transaction.commit();
+        System.out.println("Actualizado");
+        sesion.close();
 	}
 	
 	public void borrar(Object cosa) {
+		sesion=sf.openSession();
+        transaction = sesion.beginTransaction();
 		sesion.delete(cosa);
+		transaction.commit();
+        sesion.close();
 	}
 }

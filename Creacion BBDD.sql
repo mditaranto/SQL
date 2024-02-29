@@ -31,4 +31,6 @@ DROP TABLE Player;
     
 SELECT * FROM Player;
 SELECT * FROM Games;
-SELECT * FROM Compras
+SELECT * FROM Compras;
+
+UPDATE Player SET Nick = 'hola', password = 'ds', email = 'dasd' WHERE idPlayer = 836727

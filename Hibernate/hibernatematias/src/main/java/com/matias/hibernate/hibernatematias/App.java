@@ -66,7 +66,7 @@ public class App
         	System.out.println("Introduce la contraseña del jugador");
         	String password = sca.next();
         	sca.nextLine();
-            Player player = new Player(nick, email, password);
+            Player player = new Player(nick, password, email);
             instancia.guardar(player);
             break;
         case 2:
@@ -98,6 +98,7 @@ public class App
 			double precio = sca.nextDouble();
 			System.out.println("Introduce la cosa");
 			String cosa = sca.next();
+			sca.nextLine();
 			System.out.println("Introduce la fecha de la compra (en formato dd/MM/yyyy):");
 			String fechaString = sca.nextLine();
 			// Convertir el String a un objeto Date
@@ -178,15 +179,16 @@ public class App
             Games game = (Games) instancia.get(Games.class, idJuego);
             System.out.println("Introduce el nuevo nombre");
             game.setNombre(sca.next());
+            sca.nextLine();
             System.out.println("Introduce el nuevo tiempo jugado (en formato HH:mm:ss):");
             String timeString = sca.nextLine();
 
             // Convertir el String a un objeto Time
             Time tiempoJugado = null;
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-                Date date = (Date) sdf.parse(timeString);
-                tiempoJugado = new Time(date.getTime());
+            	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+		    	java.util.Date date = sdf.parse(timeString);
+		    	tiempoJugado = new Time(date.getTime());
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -205,6 +207,7 @@ public class App
             double precio = sca.nextDouble();
             System.out.println("Introduce la nueva cosa");
             String cosa = sca.next();
+            sca.nextLine();
             System.out.println("Introduce la nueva fecha de la compra (en formato dd/MM/yyyy):");
             String fechaString = sca.nextLine();
             // Convertir
